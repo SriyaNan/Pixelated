@@ -1,72 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
+import '../App.css';
 
-const socket = io("http://localhost:5001", {
-    transports: ["websocket"],
-    withCredentials: false,
-});
+const socket = io('http://localhost:5001');
 
-export default function TwoPlayerTicTacToe() {
-    const [status, setStatus] = useState("Connecting...");
-    const [roomId, setRoomId] = useState(null);
-    const [myMark, setMyMark] = useState(null);
-    const [game, setGame] = useState({
-        board: Array(9).fill(null),
-        turn: "X",
-        winner: null,
-    });
+function App() {
+    const [board, setBoard] = useState(Array(9).fill(null));
+    const [player, setPlayer] = useState('');
+    const [turn, setTurn] = useState('');
+    const [status, setStatus] = useState('Waiting for players...');
 
     useEffect(() => {
-        socket.on("connect", () => setStatus("Connected"));
-        socket.on("waiting", () => setStatus("Waiting for opponent..."));
-        socket.on("matched", ({ roomId, playerMap }) => {
-            setRoomId(roomId);
-            setMyMark(playerMap[socket.id]);
-            setStatus("Matched!");
+        socket.on('player-assign', (symbol) => {
+            setPlayer(symbol);
+            setStatus(`You are Player ${symbol}`);
         });
-        socket.on("gameState", (state) => setGame(state));
 
-        return () => socket.disconnect();
+        socket.on('update-board', ({ board, currentTurn }) => {
+            setBoard(board);
+            setTurn(currentTurn);
+        });
+
+        socket.on('status', (msg) => {
+            setStatus(msg);
+        });
+
+        return () => {
+            socket.off('player-assign');
+            socket.off('update-board');
+            socket.off('status');
+        };
     }, []);
 
-    const findMatch = () => socket.emit("findMatch", { name: "Player" });
-    const makeMove = (i) => socket.emit("makeMove", { roomId, index: i });
-    const restart = () => socket.emit("restart", { roomId });
+    const handleClick = (index) => {
+        if (board[index] || turn !== player) return;
+        socket.emit('make-move', index);
+    };
 
     return (
-        <div style={{ textAlign: "center", marginTop: "2rem" }}>
-            <h2>Tic Tac Toe (Flask + Socket.IO)</h2>
-            <p>Status: {status}</p>
-            {!roomId && <button onClick={findMatch}>Find Match</button>}
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    width: "240px",
-                    margin: "20px auto",
-                }}
-            >
-                {game.board.map((cell, i) => (
-                    <button
-                        key={i}
-                        onClick={() => makeMove(i)}
-                        disabled={!!game.board[i] || game.winner}
-                        style={{
-                            width: "80px",
-                            height: "80px",
-                            fontSize: "2rem",
-                            border: "1px solid #333",
-                        }}
-                    >
+        <div className="game-container">
+            <h1>Tic Tac Toe</h1>
+            <p className="status">{status}</p>
+            <div className="board">
+                {board.map((cell, i) => (
+                    <div key={i} className="cell" onClick={() => handleClick(i)}>
                         {cell}
-                    </button>
+                    </div>
                 ))}
             </div>
-
-            {game.winner && (
-                <h3>{game.winner === "draw" ? "Draw!" : `Winner: ${game.winner}`}</h3>
-            )}
-            {roomId && <button onClick={restart}>Restart</button>}
+            {player && <p>You are: <strong>{player}</strong></p>}
         </div>
     );
 }
+
+export default App;

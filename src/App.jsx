@@ -24,6 +24,7 @@ function App() {
         <Route path="/leaderboards" element={<Leaderboards />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/games/twoplayerttt" element={<TwoPlayerTTT />} />
+        
        
       </Routes>
     </BrowserRouter>
