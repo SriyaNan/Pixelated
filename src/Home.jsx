@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 
 
 function App() {
+    const API_URL = "http://localhost:5000";
     const navigate = useNavigate();
     const [showAuthPopup, setShowAuthPopup] = useState(false);
     const [authMode, setAuthMode] = useState("login"); // "login" or "signup"
@@ -33,7 +34,9 @@ function App() {
         { title: "Slide Puzzle", desc: "A puzzle game where you slide tiles to form a complete image.", link: "/games/Slidepuzzle", img: slidepuzzle },
         { title: "Snake Game", desc: "A classic game where you navigate a snake to eat food.", link: "/games/Snake", img: snake },
         { title: "Tetris", desc: "A classic puzzle game where you rotate blocks to form a solid line.", link: "/games/Tetris", img: tetris },
-        { title: "Tic-Tac-Toe", desc: "A game of strategy, where you play against the computer or a friend.", link: "/games/Tictactoe", img: tictactoe },
+        { title: "Tic-Tac-Toe", desc: "A game of strategy, where you play against the computer.", link: "/games/Tictactoe", img: tictactoe },
+        { title: "2 player Tic-Tac-Toe", desc: "A game of strategy, where you play against a friend.", link: "/games/twoplayerttt", img: tictactoe },
+
     ];
 
     // Slider functions
@@ -53,7 +56,7 @@ function App() {
     useEffect(() => {
         async function fetchCurrentUser() {
             try {
-                const res = await fetch("http://localhost:5000/api/current_user", {
+                const res = await fetch(`${API_URL}/api/current_user`, {
                     credentials: "include",
                 });
                 const data = await res.json();
@@ -77,7 +80,7 @@ function App() {
         if (!username || !password) return alert("Enter username and password");
 
         try {
-            const res = await fetch("http://localhost:5000/api/login", {
+            const res = await fetch(`${API_URL}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -106,7 +109,7 @@ function App() {
         if (!email || !username || !password) return alert("Enter all fields");
 
         try {
-            const res = await fetch("http://127.0.0.1:5000/api/signup", {
+            const res = await fetch(`${API_URL}/api/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -115,12 +118,15 @@ function App() {
 
             const data = await res.json();
             if (res.ok) {
-                alert("Signup successful! Please log in.");
-                setAuthMode("login");
+                // ✅ update context with logged-in user
+                setUserContext(data.user);
+
                 setShowAuthPopup(false);
                 setEmail("");
                 setUsername("");
                 setPassword("");
+
+                // ✅ redirect to dashboard automatically
                 navigate("/dashboard");
             } else {
                 alert(data.error || "Signup failed");
@@ -130,12 +136,13 @@ function App() {
         }
     };
 
+
     // -----------------------------
     // Logout
     // -----------------------------
     const handleLogout = async () => {
         try {
-            await fetch("http://127.0.0.1:5000/api/logout", {
+            await fetch(`${API_URL}/api/logout`, {
                 method: "POST",
                 credentials: "include",
             });

@@ -18,24 +18,34 @@ export default function GuessNumber() {
 
         setAttempts((prev) => prev + 1);
 
+        const newAttempts = attempts + 1;
+
         if (n === target) {
-            setMsg(`Correct! You took ${attempts + 1} attempts. Refresh to play again.`);
+            setMsg(`Correct! You took ${newAttempts} attempts.`);
             setGameOver(true);
 
             if (user) {
-                const score = (attempts + 1) * 0.5; // multiply attempts by 0.5
-                fetch("http://localhost:5000/api/guessnumber_score", {
+                fetch("http://localhost:5000/api/update_guessnumber_score", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
-                    body: JSON.stringify({ username: user.username, score }),
+                    body: JSON.stringify({
+                        username: user.username,
+                        attempts: newAttempts,
+                    }),
                 }).catch((err) => console.error("Error saving score:", err));
             }
+        } else if (newAttempts >= 30) {
+            setMsg(`Game over! You failed to guess the number in 30 attempts. The number was ${target}.`);
+            setGameOver(true);
+
+            
         } else if (n < target) setMsg("Too low!");
         else setMsg("Too high!");
 
         setGuess("");
     }
+
 
     return (
         <>

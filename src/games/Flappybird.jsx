@@ -31,45 +31,43 @@ export default function FlappyBird() {
     // -----------------------------
     const fetchMaxScore = async () => {
         if (!user) return;
+
         try {
             const res = await fetch("http://localhost:5000/api/get_maxscore", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: user.username, game: "Flappy" }),
+                credentials: "include"
             });
             const data = await res.json();
             if (res.ok) {
-                const ms = data.maxscore ?? 0;
-                // update both state + localStorage
-                setBest(ms);
-            } else {
-                console.warn("get_maxscore failed:", data);
+                setBest(data.maxscore ?? 0);
             }
         } catch (err) {
-            console.error("Failed to fetch maxscore", err);
+            console.error(err);
         }
     };
+
 
     // -----------------------------
     // Save score to backend (and localStorage)
     // -----------------------------
     const saveScore = async (newScore) => {
-        // always persist locally instantly
         try { localStorage.setItem("flappy_best", String(newScore)); } catch { }
 
-        // only call backend if user exists
         if (!user) return;
+
         try {
             await fetch("http://localhost:5000/api/update_score", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ username: user.username, score: newScore, game: "Flappy" }),
+                credentials: "include", // ✅ important for session cookie
+                body: JSON.stringify({ score: newScore }) // only send score
             });
         } catch (err) {
             console.error("Error saving score:", err);
         }
     };
+
 
     // Fetch best when user becomes available (or on mount if user already there)
     useEffect(() => {

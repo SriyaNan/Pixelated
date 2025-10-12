@@ -8,6 +8,7 @@ import Tetris from "./games/Tetris.jsx";
 import Home from "./Home"; 
 import Leaderboards from "./Leaderboards";
 import Dashboard from "./Dashboard.jsx";
+import TwoPlayerTTT from "./games/twoplayerttt.jsx";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/games/Tetris" element={<Tetris />} />
         <Route path="/leaderboards" element={<Leaderboards />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/games/twoplayerttt" element={<TwoPlayerTTT />} />
        
       </Routes>
     </BrowserRouter>
