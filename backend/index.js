@@ -10,38 +10,61 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-app.use(
-    cors({
-        origin: "http://localhost:5173",
-        credentials: true,
-    }),
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            sameSite: "lax", // 'none' only if using HTTPS
-            secure: false,    // true if using HTTPS
-            httpOnly: true,
-        },
-    })
-);
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        sameSite: "lax",   // works on localhost
+        secure: false,     // true only if HTTPS
+        httpOnly: true,
+    }
+}));
 
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            sameSite: "none",
-            secure: false, // true if using HTTPS
-            httpOnly: true,
-        },
-    })
-);
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+
+app.get("/api/user/scores", async (req, res) => {
+    try {
+        const user_id = req.session.user_id;
+
+        // User not logged in
+        if (!user_id) {
+            return res.status(401).json({ error: "Not logged in" });
+        }
+
+        // Fetch all game scores for the user
+        const { data, error } = await supabase
+            .from("user1")
+            .select("username, Flappy, guessnum, Slide, Snake, Tetris, TTT")
+            .eq("id", user_id)
+            .single();
+
+        if (error) throw error;
+
+        // Prepare games array
+        const games = [
+            { name: "Flappy Bird", score: data.Flappy || 0 },
+            { name: "Guess Number", score: data.guessnum == null ? 0 : data.guessnum },
+            { name: "Slide Puzzle", score: data.Slide || 0 },
+            { name: "Snake Game", score: data.Snake || 0 },
+            { name: "Tetris", score: data.Tetris || 0 },
+            { name: "Tic-Tac-Toe", score: data.TTT || 0 },
+        ];
+
+        // Send response
+        res.json({ username: data.username, games });
+    } catch (e) {
+        console.error("Error fetching user scores:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 
 
@@ -213,26 +236,47 @@ app.get("/api/leaderboards", async (req, res) => {
 // -----------------------------
 // UPDATE GUESSNUMBER SCORE
 // -----------------------------
+// ✅ Fetch best score
+app.post("/api/get_guessnumber_score", async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ error: "Missing username" });
+
+        const { data, error } = await supabase
+            .from("user1")
+            .select("guessnum")
+            .eq("username", username)
+            .single();
+
+        if (error) throw error;
+        res.json({ best: data?.guessnum ?? null });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ✅ Update best score
 app.post("/api/update_guessnumber_score", async (req, res) => {
     try {
         const { username, attempts } = req.body;
         if (!username || attempts == null)
             return res.status(400).json({ error: "Missing data" });
 
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
             .from("user1")
             .select("guessnum")
-            .eq("username", username);
+            .eq("username", username)
+            .single();
 
-        if (!data || data.length === 0)
-            return res.status(404).json({ error: "User not found" });
+        if (fetchError) throw fetchError;
 
-        const current_best = data[0].guessnum;
-        if (current_best == null || attempts < current_best) {
-            await supabase
+        const currentBest = data?.guessnum;
+        if (currentBest == null || attempts < currentBest) {
+            const { error } = await supabase
                 .from("user1")
                 .update({ guessnum: attempts })
                 .eq("username", username);
+            if (error) throw error;
         }
 
         res.json({ message: "Guess Number score updated!" });

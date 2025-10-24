@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "./UserContext";
 import "./Slider.css";
 
-// Game images
 import snake from "./images/snake.jpg";
 import number from "./images/guessnumber.png";
 import flappy from "./images/flappy.jpg";
@@ -27,7 +26,7 @@ function Dashboard() {
                 credentials: "include",
             });
             setUserContext(null);
-            navigate("/"); 
+            navigate("/");
         } catch {
             alert("Logout failed");
         }
@@ -40,8 +39,7 @@ function Dashboard() {
         { title: "Snake Game", link: "/games/Snake", img: snake },
         { title: "Tetris", link: "/games/Tetris", img: tetris },
         { title: "Tic-Tac-Toe", link: "/games/Tictactoe", img: tictactoe },
-        { title: "2 player Tic-Tac-Toe", desc: "A game of strategy, where you play against a friend.", link: "/games/twoplayerttt", img: tictactoe },
-        
+        { title: "2 player Tic-Tac-Toe", link: "/games/twoplayerttt", img: tictactoe },
     ];
 
     const nextSlide = () => setActiveIndex((prev) => (prev + 1) % games.length);
@@ -62,6 +60,7 @@ function Dashboard() {
             {/* ------------------ NAVBAR ------------------ */}
             <nav className="navbar">
                 <h1>Pixelated</h1>
+
                 <>
                     <Link
                         to="/Leaderboards"
@@ -74,6 +73,7 @@ function Dashboard() {
                     >
                         Leaderboards
                     </Link>
+
 
                     <button onClick={handleLogout}>Log Out</button>
                 </>
@@ -156,6 +156,7 @@ function Dashboard() {
                             textAlign: "center",
                             width: "350px",
                             border: "1px solid white",
+                            position: "relative",
                         }}
                     >
                         <button

@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const W = 10;
 const H = 20;
@@ -46,6 +48,8 @@ function clone(v) {
 }
 
 export default function Tetris() {
+    const navigate = useNavigate();
+
     const canvasRef = useRef(null);
     const [score, setScore] = useState(0);
 
@@ -230,6 +234,26 @@ export default function Tetris() {
             >
                 <h1 style={{ margin: 0 }}>Pixelated</h1>
             </nav>
+            <button
+                onClick={() => navigate("/dashboard")}
+                style={{
+                    position: "absolute",
+                    top: 70,
+                    left: 20,
+                    background: "none",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    transition: "0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.background = "#22c55e")}
+                onMouseOut={(e) => (e.target.style.background = "none")}
+            >
+                ← Back
+            </button>
 
             <main
                 style={{
@@ -243,7 +267,7 @@ export default function Tetris() {
                     fontFamily: "sans-serif",
                     backgroundColor: "#0b0b12",
                     color: "white",
-                    overflow: "hidden", // prevent scroll
+                    overflow: "hidden", 
                 }}
             >
 

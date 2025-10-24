@@ -1,14 +1,75 @@
-import { useMemo, useState } from "react";
-import { useContext } from "react";
+import { useMemo, useState, useContext, useEffect, useRef } from "react";
 import { UserContext } from "../UserContext";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function GuessNumber() {
+    const navigate = useNavigate();
     const { user } = useContext(UserContext);
+
     const target = useMemo(() => Math.floor(Math.random() * 100) + 1, []);
     const [guess, setGuess] = useState("");
     const [msg, setMsg] = useState("Guess a number between 1 and 100.");
     const [attempts, setAttempts] = useState(0);
+    const [best, setBest] = useState(() => {
+        try {
+            const saved = localStorage.getItem("guess_best");
+            return saved ? parseInt(saved, 10) : null;
+        } catch {
+            return null;
+        }
+    });
     const [gameOver, setGameOver] = useState(false);
+
+    const bestRef = useRef(best);
+    const attemptsRef = useRef(attempts);
+
+    useEffect(() => {
+        bestRef.current = best;
+        try {
+            if (best !== null) localStorage.setItem("guess_best", String(best));
+        } catch { }
+    }, [best]);
+
+    useEffect(() => {
+        attemptsRef.current = attempts;
+    }, [attempts]);
+
+    const fetchBest = async () => {
+        if (!user) return;
+        try {
+            const res = await fetch("http://localhost:5000/api/get_guessnumber_score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ username: user.username }),
+            });
+            const data = await res.json();
+            if (res.ok) setBest(data.best ?? null);
+        } catch (err) {
+            console.error("Error fetching score:", err);
+        }
+    };
+
+    const saveBest = async (newBest) => {
+        if (!user) return;
+        try {
+            await fetch("http://localhost:5000/api/update_guessnumber_score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: user.username,
+                    attempts: newBest,
+                }),
+            });
+        } catch (err) {
+            console.error("Error saving score:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (user) fetchBest();
+    }, [user]);
 
     function submit() {
         if (gameOver) return;
@@ -16,36 +77,25 @@ export default function GuessNumber() {
         if (isNaN(n)) return setMsg("Enter a valid number.");
         if (n < 1 || n > 100) return setMsg("Stay between 1 and 100.");
 
-        setAttempts((prev) => prev + 1);
-
         const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
 
         if (n === target) {
-            setMsg(`Correct! You took ${newAttempts} attempts.`);
+            setMsg(`✅ Correct! You took ${newAttempts} attempts.`);
             setGameOver(true);
 
-            if (user) {
-                fetch("http://localhost:5000/api/update_guessnumber_score", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        username: user.username,
-                        attempts: newAttempts,
-                    }),
-                }).catch((err) => console.error("Error saving score:", err));
+            if (bestRef.current === null || newAttempts < bestRef.current) {
+                setBest(newAttempts);
+                saveBest(newAttempts);
             }
         } else if (newAttempts >= 30) {
-            setMsg(`Game over! You failed to guess the number in 30 attempts. The number was ${target}.`);
+            setMsg(`❌ Game over! You failed to guess in 30 attempts. The number was ${target}.`);
             setGameOver(true);
-
-            
         } else if (n < target) setMsg("Too low!");
         else setMsg("Too high!");
 
         setGuess("");
     }
-
 
     return (
         <>
@@ -61,14 +111,47 @@ export default function GuessNumber() {
                     zIndex: 1000,
                     color: "white",
                     fontFamily: "'Jersey 10', sans-serif",
-                    fontWeight: 100,
                     letterSpacing: "5px",
-                    userSelect: "none",
                     borderBottom: "1px solid white",
                 }}
             >
-                <h1 style={{ margin: 0 }}>Pixelated</h1>
+                <h1 style={{ margin: 0 }}>
+                    <Link
+                        to="/dashboard"
+                        style={{
+                            color: "white",
+                            textDecoration: "none",
+                            fontWeight: "500",
+                            marginLeft: 20,
+                        }}
+                    >
+                        Pixelated
+                    </Link>
+                </h1>
             </nav>
+
+            <button
+                onClick={() => navigate("/dashboard")}
+                style={{
+                    position: "absolute",
+                    top: 70,
+                    left: 20,
+                    background: "none",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    transition: "0.2s",
+                    zIndex: 10,
+                }}
+                onMouseOver={(e) => (e.target.style.background = "#22c55e")}
+                onMouseOut={(e) => (e.target.style.background = "none")}
+            >
+                ← Back
+            </button>
+
             <div
                 style={{
                     minHeight: "calc(100vh - 50px)",
@@ -103,6 +186,11 @@ export default function GuessNumber() {
                     >
                         {msg}
                     </p>
+
+                    <p style={{ color: "#22c55e", fontSize: "0.9rem" }}>
+                        {best !== null ? `Best: ${best} attempts` : ""}
+                    </p>
+
                     <div style={{ display: "flex", gap: "16px" }}>
                         <input
                             type="number"
@@ -135,7 +223,6 @@ export default function GuessNumber() {
                                 cursor: "pointer",
                                 fontSize: "1rem",
                                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                                transition: "background 0.2s",
                             }}
                         >
                             Guess

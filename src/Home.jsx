@@ -34,7 +34,6 @@ function App() {
     { title: "2 player Tic-Tac-Toe", desc: "Play against a friend in real-time.", link: "/games/twoplayerttt", img: tictactoe },
   ];
 
-  // Auto-slide logic
   const nextSlide = () => setActiveIndex((prev) => (prev + 1) % games.length);
   const prevSlide = () => setActiveIndex((prev) => (prev - 1 + games.length) % games.length);
 
@@ -48,7 +47,6 @@ function App() {
     intervalRef.current = setInterval(nextSlide, 5000);
   }, [activeIndex]);
 
-  // Restore session or fetch user
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {

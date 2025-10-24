@@ -12,9 +12,8 @@ export default function Leaderboards() {
                 });
                 const data = await res.json();
 
-                console.log("Leaderboard API response:", data); // ✅ debug log
+                console.log("Leaderboard API response:", data); 
 
-                // Ensure we actually got a valid array
                 if (!data.users || !Array.isArray(data.users)) {
                     console.error("Unexpected API format:", data);
                     setUsers([]);
@@ -58,7 +57,7 @@ export default function Leaderboards() {
                 }}
             >
                 <h1 style={{ margin: 0 }}>Pixelated</h1>
-                <a href="/" style={{ color: "white", textDecoration: "none" }}>
+                <a href="/dashboard" style={{ color: "white", textDecoration: "none" }}>
                     Home
                 </a>
             </nav>

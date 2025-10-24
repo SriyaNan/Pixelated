@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
 import { UserContext } from "../UserContext";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function FlappyBird() {
+    const navigate = useNavigate();
     const { user } = useContext(UserContext);
 
     const canvasRef = useRef(null);
 
-    // initialize best from localStorage (instant on refresh)
     const [best, setBest] = useState(() => {
         try {
             const saved = typeof window !== "undefined" && localStorage.getItem("flappy_best");
@@ -19,16 +20,12 @@ export default function FlappyBird() {
     const [score, setScore] = useState(0);
     const [running, setRunning] = useState(false);
 
-    // refs to hold latest values without forcing canvas effect re-runs
     const bestRef = useRef(best);
     const scoreRef = useRef(score);
 
     useEffect(() => { bestRef.current = best; try { localStorage.setItem("flappy_best", String(best)); } catch { } }, [best]);
     useEffect(() => { scoreRef.current = score; }, [score]);
 
-    // -----------------------------
-    // Fetch max score for the user (backend)
-    // -----------------------------
     const fetchMaxScore = async () => {
         if (!user) return;
 
@@ -48,9 +45,6 @@ export default function FlappyBird() {
     };
 
 
-    // -----------------------------
-    // Save score to backend (and localStorage)
-    // -----------------------------
     const saveScore = async (newScore) => {
         try { localStorage.setItem("flappy_best", String(newScore)); } catch { }
 
@@ -60,38 +54,30 @@ export default function FlappyBird() {
             await fetch("http://localhost:5000/api/update_score", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ important for session cookie
-                body: JSON.stringify({ score: newScore }) // only send score
+                credentials: "include", 
+                body: JSON.stringify({ score: newScore }) 
             });
         } catch (err) {
             console.error("Error saving score:", err);
         }
     };
 
-
-    // Fetch best when user becomes available (or on mount if user already there)
     useEffect(() => {
         if (user) fetchMaxScore();
         else setBest((prev) => prev || 0);
-        // only run when `user` changes
     }, [user]);
 
-    // When the game ends (running toggles false), save if it's a new best
     useEffect(() => {
         if (!running && scoreRef.current > 0) {
             const s = scoreRef.current;
             const b = bestRef.current;
             if (s > b) {
-                setBest(s);           // updates state + localStorage via effect above
-                saveScore(s);         // persist to backend if user exists
+                setBest(s);          
+                saveScore(s);       
             }
         }
-        // intentionally only depend on `running` so this runs exactly when the game stops
     }, [running]);
 
-    // -----------------------------
-    // Game logic (canvas) — depends only on `running`
-    // -----------------------------
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -125,7 +111,7 @@ export default function FlappyBird() {
             localScore = 0;
             tick = 0;
             setScore(0);
-            // IMPORTANT: do NOT save on restart — we save after a game ends instead
+           
         }
 
         function addPipe() {
@@ -172,7 +158,6 @@ export default function FlappyBird() {
 
             ctx.fillStyle = "#e5e7eb";
             ctx.font = "12px monospace";
-            // show the current best from ref so it updates without restarting the effect
             ctx.fillText(`Score: ${localScore}  Best: ${Math.max(bestRef.current, localScore)}`, 8, 14);
 
             if (!running) ctx.fillText("Space to start/flap", 60, H / 2);
@@ -220,39 +205,95 @@ export default function FlappyBird() {
             cancelAnimationFrame(raf);
             window.removeEventListener("keydown", onKeyDown);
         };
-    }, [running]); // don't depend on `best` (avoids resetting game loop)
+    }, [running]); 
 
     return (
-        <div
-            style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",        // Prevent scrolling
-                margin: 0,
-                padding: 0,
-                backgroundColor: "#0b0b12" // optional: match your game bg color
-            }}
-        >
-            <canvas
-                ref={canvasRef}
+        <>
+            <nav
                 style={{
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    imageRendering: "pixelated",
-                    display: "block"
+                    backgroundColor: "black",
+                    height: "50px",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0 20px",
+                    position: "fixed",
+                    top: 0,
+                    width: "100%",
+                    zIndex: 1000,
+                    color: "white",
+                    fontFamily: "'Jersey 10', sans-serif",
+                    fontWeight: 100,
+                    letterSpacing: "5px",
+                    userSelect: "none",
+                    borderBottom: "1px solid white",
                 }}
-            />
-            <p style={{ fontSize: "12px", color: "#888", marginTop: "12px" }}>
-                Press Space to flap. Avoid the pipes.
-            </p>
-        </div>
+            >
+                <h1 style={{ margin: 0 }}>
+                    <Link
+                        to="/dashboard"
+                        style={{
+                            color: "white",
+                            textDecoration: "none",
+                            fontWeight: "500",
+                            marginLeft: 20,
+                        }}
+                    >
+                        Pixelated
+                    </Link>
+                </h1>
+            </nav>
+
+            <div
+                style={{
+                    position: "relative", 
+                    width: "100vw",
+                    height: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#0b0b12",
+                    overflow: "hidden",
+                }}
+            >
+                <button
+                    onClick={() => navigate("/dashboard")}
+                    style={{
+                        position: "absolute",
+                        top: 70,
+                        left: 20,
+                        background: "none",
+                        color: "#22c55e",
+                        border: "1px solid #22c55e",
+                        borderRadius: 8,
+                        padding: "6px 12px",
+                        cursor: "pointer",
+                        fontFamily: "monospace",
+                        transition: "0.2s",
+                        zIndex: 10,
+                    }}
+                    onMouseOver={(e) => (e.target.style.background = "#22c55e")}
+                    onMouseOut={(e) => (e.target.style.background = "none")}
+                >
+                    ← Back
+                </button>
+
+                <canvas
+                    ref={canvasRef}
+                    style={{
+                        borderRadius: "6px",
+                        border: "1px solid #22c55e",
+                        boxShadow: "0 0 8px #22c55e",
+                        imageRendering: "pixelated",
+                        display: "block",
+                    }}
+                />
+                <p style={{ fontSize: "12px", color: "#888", marginTop: "12px" }}>
+                    Press Space to flap. Avoid the pipes.
+                </p>
+            </div>
+        </>
     );
+
 
 }

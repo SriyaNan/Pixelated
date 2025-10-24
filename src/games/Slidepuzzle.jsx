@@ -10,6 +10,7 @@ import img7 from "../images/slider7.jpg";
 import img8 from "../images/slider8.jpg";
 import img9 from "../images/slider9.jpg";
 import img10 from "../images/slider10.jpg";
+import { Link, useNavigate } from "react-router-dom";
 
 const IMAGES = [img1, img2, img3, img4, img5, img6, img7, img8, img9, img10];
 
@@ -17,6 +18,7 @@ const N = 3;
 const GOAL = Array.from({ length: N * N }, (_, i) => (i + 1) % (N * N));
 
 function shuffleSolvable(goal) {
+    
     let arr;
     do {
         arr = [...goal];
@@ -42,6 +44,7 @@ function arraysEqual(a, b) {
 }
 
 export default function SlidePuzzle() {
+    const navigate = useNavigate();
     const [tiles, setTiles] = useState(() => shuffleSolvable(GOAL));
     const [moves, setMoves] = useState(0);
     const [gameOver, setGameOver] = useState(false);
@@ -101,8 +104,28 @@ export default function SlidePuzzle() {
             >
                 <h1 style={{ margin: 0 }}>Pixelated</h1>
             </nav>
+            <button
+                onClick={() => navigate("/dashboard")}
+                style={{
+                    position: "absolute",
+                    top: 70,
+                    left: 20,
+                    background: "none",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    transition: "0.2s",
+                    zIndex: 10, 
+                }}
+                onMouseOver={(e) => (e.target.style.background = "#22c55e")}
+                onMouseOut={(e) => (e.target.style.background = "none")}
+            >
+                ← Back
+            </button>     
 
-            {/* Puzzle + Original image side by side */}
             <div
                 style={{
                     minHeight: "100vh",
@@ -114,7 +137,6 @@ export default function SlidePuzzle() {
                     fontFamily: "sans-serif",
                 }}
             >
-                {/* Puzzle board */}
                 <div>
                     <div
                         style={{
@@ -178,7 +200,6 @@ export default function SlidePuzzle() {
                     </div>
                 </div>
 
-                {/* Original image */}
                 <div>
                     <img
                         src={image}

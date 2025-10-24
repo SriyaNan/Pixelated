@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "../assets/Tictactoe.css";
+import { useNavigate } from "react-router-dom";
 
 function TicTacToe() {
+    const navigate = useNavigate();
     const [board, setBoard] = useState(Array(9).fill(null));
     const [isXNext, setIsXNext] = useState(true);
     const [winner, setWinner] = useState(null);
@@ -83,6 +85,27 @@ function TicTacToe() {
             <nav className="navbar">
                 <h1>Pixelated</h1>
             </nav>
+            <button
+                onClick={() => navigate("/dashboard")}
+                style={{
+                    position: "absolute",
+                    top: 70,
+                    left: 20,
+                    background: "none",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    transition: "0.2s",
+                    zIndex: 10, 
+                }}
+                onMouseOver={(e) => (e.target.style.background = "#22c55e")}
+                onMouseOut={(e) => (e.target.style.background = "none")}
+            >
+                ← Back
+            </button>     
             <div className="tictactoe-container">
                 <h1>Tic Tac Toe</h1>
                 <div className="tictactoe-grid">

@@ -41,15 +41,12 @@
 .cardname {
     position: absolute;
     bottom: 0;
-    /* position at the bottom of the card */
     left: 0;
     width: 100%;
-    /* span full width of the card */
     color: white;
     background-color: transparent;
     text-align: center;
     padding: 10px 0;
-    /* add vertical padding */
 }
 
 .arrows button{

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Snake() {
+    const navigate = useNavigate();
     const ref = useRef(null);
     const [running, setRunning] = useState(true);
     const [gameOver, setGameOver] = useState(false);
@@ -33,11 +35,10 @@ export default function Snake() {
             if (tick % Math.max(1, Math.floor(60 / speed)) === 0 && !gameOver) {
                 let head = [snake[0][0] + dir[0], snake[0][1] + dir[1]];
 
-                // check wall collision - no wrapping
                 if (head[0] < 0 || head[0] >= W || head[1] < 0 || head[1] >= H) {
                     setGameOver(true);
                     setRunning(false);
-                    return; // stop further processing
+                    return; 
                 }
 
                 // hit self
@@ -77,7 +78,7 @@ export default function Snake() {
         function onKey(e) {
             if (gameOver) return;
             if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-                e.preventDefault(); // Prevent page scrolling
+                e.preventDefault(); 
             }
             if (e.key === "ArrowUp" && dir[1] !== 1) dir = [0, -1];
             if (e.key === "ArrowDown" && dir[1] !== -1) dir = [0, 1];
@@ -117,6 +118,27 @@ export default function Snake() {
             >
                 <h1 style={{ margin: 0 }}>Pixelated</h1>
             </nav>
+            <button
+                onClick={() => navigate("/dashboard")}
+                style={{
+                    position: "absolute",
+                    top: 70,
+                    left: 20,
+                    background: "none",
+                    color: "#22c55e",
+                    border: "1px solid #22c55e",
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    transition: "0.2s",
+                    zIndex: 10, 
+                }}
+                onMouseOver={(e) => (e.target.style.background = "#22c55e")}
+                onMouseOut={(e) => (e.target.style.background = "none")}
+            >
+                ← Back
+            </button>     
 
             <main
                 style={{
